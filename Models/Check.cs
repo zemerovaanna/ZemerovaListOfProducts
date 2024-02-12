@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Diagnostics.Metrics;
 using System.Linq;
+using System.Runtime.Serialization.Formatters;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Channels;
@@ -71,11 +72,36 @@ namespace ConsoleAppListOfProducts.Models
             {
                 WriteStylishText(true, "\nПожалуйста, введите " + enter + ": ", AppColors.Default);
                 result = Console.ReadLine();
-                if (result.StartsWith(' ') || result.EndsWith(' '))
+
+                int good = 0;
+                int another = 0;
+                for(int i = 0; i < result.Length; i++)
+                {
+                    if (char.IsLetterOrDigit(result[i]))
+                    {
+                        good++;
+                    }
+                    else
+                    {
+                        another++;
+                    }
+                }
+
+                if (result.StartsWith(' ') || result.EndsWith(' ') || result.Contains('\t'))
                 { result = null; }
+                else if (result.Length < 3)
+                {
+                    WriteStylishText(false, "Недостаточное количество символов. Минимальное количество: 3 символа.\n", AppColors.Warning);
+                    result = null;
+                }
                 else if (result.Length > length)
                 {
                     WriteStylishText(false, "Превышено допустимое количество символов " + result.Length + "/" + length + " символов.\n", AppColors.Warning);
+                    result = null;
+                }
+                else if(good < another)
+                {
+                    WriteStylishText(false, "Некорректный ввод.\n", AppColors.Warning);
                     result = null;
                 }
             }
@@ -146,7 +172,10 @@ namespace ConsoleAppListOfProducts.Models
                 {
                     success = byte.TryParse(enter, out byte number);
                     if (success == true)
-                    { if (byte.Parse(enter) > formats.Length) { enter = null; } }
+                    {
+                        if (byte.Parse(enter) > formats.Length)
+                        { success = false;  }
+                    }
                 }
             }
             while (!success);
@@ -246,8 +275,11 @@ namespace ConsoleAppListOfProducts.Models
                             if (Check.CheckExit(price) == null)
                             { return; }
                             correctPrice = ulong.TryParse(price, out ulong number);
-                            if (!correctPrice)
-                            { WriteStylishText(true, "Пожалуйста, введите цену числом.", AppColors.Warning); }
+                            if (!correctPrice || ulong.Parse(price) < 100)
+                            {
+                                WriteStylishText(true, "Пожалуйста, введите цену товара числом, которое не меньше 100.", AppColors.Warning);
+                                correctPrice = false;
+                            }
                         }
 
                         discount = CorrrectDiscount();
@@ -303,8 +335,11 @@ namespace ConsoleAppListOfProducts.Models
                         if (Check.CheckExit(price) == null)
                         { return; }
                         correctPrice = ulong.TryParse(price, out ulong number);
-                        if (!correctPrice)
-                        { WriteStylishText(true, "Пожалуйста, введите новую цену числом.", AppColors.Warning); }
+                        if (!correctPrice || ulong.Parse(price) < 100)
+                        {
+                            WriteStylishText(true, "Пожалуйста, введите новую цену числом, которое не меньше 100.", AppColors.Warning);
+                            correctPrice = false;
+                        }
                     }
                 }
 
